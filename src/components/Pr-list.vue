@@ -115,11 +115,14 @@
             </div>
             <div class="form-group mb-3">
               <label>Danh mục:</label>
-            <select v-model="currentProduct.category_name" class="form-select">
-              <option v-for="category in categories" :key="category.category_id" :value="category.category_name">
-                {{ category.category_name }}
-              </option>
-            </select>
+              <select v-model="currentProduct.product_cat" class="form-select">
+                <option
+                  v-for="category in categories"
+                  :key="category.category_id"
+                  :value="category.category_id">
+                  {{ category.category_name }}
+                </option>
+              </select>
             </div>
             <div class="form-group mb-3">
               <label for="product_img">Chọn hình ảnh:</label>
@@ -129,8 +132,15 @@
                 class="form-control"
                 @change="handleImageUpload"
               />
-              <img v-if="imagePreview" :src="imagePreview" alt="Hình ảnh sản phẩm" width="100" class="mt-2" />
+              <img
+                v-if="imagePreview"
+                :src="imagePreview"
+                alt="Hình ảnh sản phẩm"
+                width="100"
+                class="mt-2"
+              />
             </div>
+
             <div class="form-group mb-3">
               <label for="product_status">Trạng thái:</label>
               <select
@@ -138,8 +148,8 @@
                 v-model="currentProduct.product_status"
                 class="form-control"
               >
-                <option value="hiển thị">Hiển thị</option>
-                <option value="không hiển thị">Không hiển thị</option>
+                <option value="Còn hàng">Còn hàng</option>
+                <option value="Hết hàng">Hết hàng</option>
               </select>
             </div>
           </div>
@@ -210,7 +220,7 @@ export default {
       }
     };
 
-    // Load danh sách danh mục từ cate-list (giả sử lấy từ API hoặc file khác)
+    // Load danh sách danh mục từ db.json
     const loadCategories = async () => {
       try {
         const response = await axios.get("http://localhost:3000/categories");
@@ -220,32 +230,64 @@ export default {
       }
     };
 
-    const selectAll = (event) => {
-      selectedProducts.value = event.target.checked
-        ? products.value.map((product) => product.product_id)
-        : [];
+    // Hàm tạo product_id tự động tăng
+    const generateProductId = () => {
+      const maxId = products.value.reduce(
+        (max, product) => Math.max(max, product.product_id),
+        0
+      );
+      return maxId + 1;
     };
 
+    // Mở modal thêm sản phẩm
     const openAddModal = () => {
-      currentProduct.value = { product_name: "", product_price: "", product_discount: "", product_count: "", product_cat: "", product_status: "hiển thị", product_img: "" };
+      currentProduct.value = {
+        product_id: generateProductId(), // Tạo ID tự động
+        product_name: "",
+        product_price: "",
+        product_discount: "",
+        product_count: "",
+        product_cat: "",
+        product_status: "hiển thị",
+        product_img: "",
+        created_at: new Date().toISOString().slice(0, 10), // Ngày tạo mặc định là hôm nay
+      };
       modalTitle.value = "Thêm mới sản phẩm";
       isModalVisible.value = true;
+      imagePreview.value = null; // Reset hình ảnh
     };
 
     const openEditModal = (product) => {
       currentProduct.value = { ...product };
       modalTitle.value = "Sửa sản phẩm";
       isModalVisible.value = true;
+      imagePreview.value = product.product_img; // Hiển thị hình ảnh đã lưu
+    };
+
+    const handleImageUpload = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const arrayBuffer = reader.result;
+          const blob = new Blob([arrayBuffer], { type: file.type });
+          currentProduct.value.product_img = URL.createObjectURL(blob);
+          imagePreview.value = currentProduct.value.product_img; // Hiển thị preview
+        };
+        reader.readAsArrayBuffer(file);
+      }
     };
 
     const saveProduct = async () => {
       try {
         if (currentProduct.value.id) {
+          // Cập nhật sản phẩm
           await axios.put(
             `http://localhost:3000/products/${currentProduct.value.id}`,
             currentProduct.value
           );
         } else {
+          // Thêm sản phẩm mới
           await axios.post("http://localhost:3000/products", currentProduct.value);
         }
         loadProducts();
@@ -272,26 +314,15 @@ export default {
       }
     };
 
+    const selectAll = (event) => {
+      selectedProducts.value = event.target.checked
+        ? products.value.map((product) => product.product_id)
+        : [];
+    };
+
     const closeModal = () => {
       isModalVisible.value = false;
       isDeleteModalVisible.value = false;
-    };
-
-    const handleImageUpload = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          imagePreview.value = reader.result;
-          currentProduct.value.product_img = imagePreview.value;
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-
-    const getCategoryName = (catId) => {
-      const category = categories.value.find((category) => category.id === catId);
-      return category ? category.name : "Không có danh mục";
     };
 
     onMounted(() => {
@@ -317,11 +348,11 @@ export default {
       deleteProduct,
       closeModal,
       handleImageUpload,
-      getCategoryName,
     };
   },
 };
 </script>
+
 <style scoped>
 .product-list-container {
   max-width: 1200px;

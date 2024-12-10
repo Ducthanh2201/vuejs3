@@ -51,6 +51,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 
 export default {
   name: 'AdminHome',
@@ -58,21 +59,39 @@ export default {
     const categories = ref([]);
     const products = ref([]);
     const customers = ref([]);
-    const carts = ref([]);
+    const bills = ref([]);
 
-    // Lấy dữ liệu từ localStorage khi component được mount
+    // Hàm lấy dữ liệu từ API
+    const fetchData = async () => {
+      try {
+        // Gọi API để lấy dữ liệu
+        const [categoriesResponse, productsResponse, customersResponse, billsResponse] = await Promise.all([
+          axios.get('http://localhost:3000/categories'),
+          axios.get('http://localhost:3000/products'),
+          axios.get('http://localhost:3000/users'),
+          axios.get('http://localhost:3000/bills') // Lấy dữ liệu đơn hàng
+        ]);
+
+        // Gán dữ liệu vào các biến
+        categories.value = categoriesResponse.data;
+        products.value = productsResponse.data;
+        customers.value = customersResponse.data;
+        bills.value = billsResponse.data;
+      } catch (error) {
+        console.error("Error fetching data", error);
+      }
+    };
+
+    // Gọi hàm fetchData khi component được mount
     onMounted(() => {
-      categories.value = JSON.parse(localStorage.getItem("categories")) || [];
-      products.value = JSON.parse(localStorage.getItem("products")) || [];
-      customers.value = JSON.parse(localStorage.getItem("customers")) || [];
-      carts.value = JSON.parse(localStorage.getItem("carts")) || [];
+      fetchData();
     });
 
     // Các computed properties
     const totalCategories = computed(() => categories.value.length);
     const totalProducts = computed(() => products.value.length);
     const totalCustomers = computed(() => customers.value.length);
-    const totalOrders = computed(() => carts.value.length);
+    const totalOrders = computed(() => bills.value.length);
 
     return {
       totalCategories,

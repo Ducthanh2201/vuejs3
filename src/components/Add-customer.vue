@@ -138,8 +138,6 @@
             <label for="isInactive" class="form-label ms-2">Chưa kích hoạt</label>
           </div>
         </div>
-
-        <!-- Vai trò (chỉ có vai trò Customer và mặc định là Customer) -->
         <div class="col-md-6">
           <label class="form-label">Vai trò</label>
           <div class="role-checkbox">

@@ -58,11 +58,6 @@
       </div>
       <ul v-if="subMenuState.categories" class="sub-menu">
         <li>
-          <router-link to="/Add-cate">
-            <i class="fa fa-plus"></i> Thêm danh mục
-          </router-link>
-        </li>
-        <li>
           <router-link to="/Cate-list">
             <i class="fa fa-stream"></i> Danh sách Danh mục
           </router-link>
@@ -84,11 +79,6 @@
         <i class="fa" :class="subMenuState.products ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
       </div>
       <ul v-if="subMenuState.products" class="sub-menu">
-        <li>
-          <router-link to="/Add-pr">
-            <i class="fa fa-plus"></i> Thêm sản phẩm
-          </router-link>
-        </li>
         <li>
           <router-link to="/Pr-list">
             <i class="fa fa-boxes"></i> Danh sách sản phẩm
